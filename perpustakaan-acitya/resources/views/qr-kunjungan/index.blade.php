@@ -1,0 +1,4 @@
+@extends('layouts.app')
+@section('content')
+<main class="app-page"><header class="page-header"><div><p class="eyebrow">Kunjungan Digital</p><h1>Generator QR Code</h1></div></header><section class="content-card form-card">@if(session('success'))<p class="alert alert-success">{{session('success')}}</p>@endif<form class="filter-form" method="POST" action="{{ route('qr-kunjungan.generate') }}">@csrf<label>Masa berlaku (menit)<input type="number" name="menit_berlaku" value="60" min="5" max="480"></label><button>Buat QR baru</button></form>@if($token)<p><strong>Berlaku sampai:</strong> {{ $token->berlaku_sampai->format('d M Y H:i') }}</p><img class="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&amp;data={{ urlencode(route('qr-kunjungan.scan',$token)) }}" alt="QR kunjungan"><p class="muted">Tautan: <a href="{{ route('qr-kunjungan.scan',$token) }}">halaman scan</a></p>@endif</section></main>
+@endsection
