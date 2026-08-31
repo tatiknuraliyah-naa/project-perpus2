@@ -1,4 +1,4 @@
-{{--
+g{{--
 ======================================================
 Nama File : login.blade.php
 Fungsi : Form login untuk Petugas, Siswa, Guru, dan Karyawan.
