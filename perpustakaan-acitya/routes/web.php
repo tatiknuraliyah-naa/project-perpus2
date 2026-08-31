@@ -12,6 +12,7 @@ Risiko : Kesalahan route/middleware dapat membuka akses tanpa izin atau membuat 
 */
 
 use App\Http\Controllers\AnggotaController;
+use App\Http\Controllers\ImportAnggotaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BukuController;
 use App\Http\Controllers\DashboardController;
@@ -96,6 +97,10 @@ Route::middleware('role:petugas')->group(function () {
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/peminjaman/{peminjaman}/konfirmasi', [PeminjamanController::class, 'confirmForm'])->name('peminjaman.confirm.form');
     Route::put('/peminjaman/{peminjaman}/konfirmasi', [PeminjamanController::class, 'confirm'])->name('peminjaman.confirm');
+    Route::get('/anggota/import', [ImportAnggotaController::class, 'create'])->name('anggota.import.create');
+    Route::post('/anggota/import', [ImportAnggotaController::class, 'preview'])->name('anggota.import.preview');
+    Route::post('/anggota/import/confirm', [ImportAnggotaController::class, 'confirm'])->name('anggota.import.confirm');
+    Route::get('/anggota/import/template', [ImportAnggotaController::class, 'template'])->name('anggota.import.template');
     Route::resource('anggota', AnggotaController::class)
         ->parameters(['anggota' => 'anggota'])
         ->except('show');

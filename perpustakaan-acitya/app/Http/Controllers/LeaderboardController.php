@@ -11,7 +11,6 @@ use App\Models\Pengembalian;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class LeaderboardController extends Controller
@@ -82,24 +81,36 @@ class LeaderboardController extends Controller
             ->whereBetween('peminjaman.tanggal_pinjam', [$tanggalMulai, $tanggalSelesai])
             ->whereIn('peminjaman.status', ['Dipinjam', 'Dikembalikan', 'Terlambat', 'Penggantian Buku'])
             ->groupBy('peminjaman.anggota_id')
-            ->pluck(DB::raw('SUM(detail_peminjaman.jumlah)'), 'peminjaman.anggota_id');
+            ->select('peminjaman.anggota_id')
+            ->selectRaw('SUM(detail_peminjaman.jumlah) as total_buku_dipinjam')
+            ->pluck('total_buku_dipinjam', 'peminjaman.anggota_id')
+            ->map(static fn ($total): int => (int) $total);
 
         $kunjungan = Kunjungan::query()
             ->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])
             ->groupBy('anggota_id')
-            ->pluck(DB::raw('COUNT(*)'), 'anggota_id');
+            ->select('anggota_id')
+            ->selectRaw('COUNT(*) as total_kunjungan')
+            ->pluck('total_kunjungan', 'anggota_id')
+            ->map(static fn ($total): int => (int) $total);
 
         $pengembalianTepatWaktu = Pengembalian::query()
             ->join('peminjaman', 'pengembalian.peminjaman_id', '=', 'peminjaman.id')
             ->whereBetween('pengembalian.tanggal_kembali', [$tanggalMulai, $tanggalSelesai])
             ->whereColumn('peminjaman.tanggal_jatuh_tempo', '>=', 'pengembalian.tanggal_kembali')
             ->groupBy('peminjaman.anggota_id')
-            ->pluck(DB::raw('COUNT(*)'), 'peminjaman.anggota_id');
+            ->select('peminjaman.anggota_id')
+            ->selectRaw('COUNT(*) as total_pengembalian_tepat_waktu')
+            ->pluck('total_pengembalian_tepat_waktu', 'peminjaman.anggota_id')
+            ->map(static fn ($total): int => (int) $total);
 
         $achievement = AchievementPengguna::query()
             ->whereBetween('tanggal_didapat', [$tanggalMulai, $tanggalSelesai])
             ->groupBy('anggota_id')
-            ->pluck(DB::raw('COUNT(*)'), 'anggota_id');
+            ->select('anggota_id')
+            ->selectRaw('COUNT(*) as total_achievement')
+            ->pluck('total_achievement', 'anggota_id')
+            ->map(static fn ($total): int => (int) $total);
 
         $baris = $anggota
             ->map(function (Anggota $anggota) use ($bukuDipinjam, $kunjungan, $pengembalianTepatWaktu, $achievement): array {

@@ -4,11 +4,18 @@
     <main class="app-page">
         <header class="page-header">
             <div><p class="eyebrow">Manajemen pengguna</p><h1>Data Anggota</h1><p class="muted">Kelola data siswa, guru, dan karyawan perpustakaan.</p></div>
-            <div class="page-actions"><a class="button button-secondary" href="{{ route('dashboard.petugas') }}">Dashboard</a><a class="button" href="{{ route('anggota.create') }}">Tambah anggota</a></div>
+            <div class="page-actions"><a class="button button-secondary" href="{{ route('dashboard.petugas') }}">Dashboard</a><a class="button button-secondary" href="{{ route('anggota.import.create') }}">Import Excel</a><a class="button" href="{{ route('anggota.create') }}">Tambah anggota</a></div>
         </header>
 
         @if (session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
         @if (session('error')) <div class="alert alert-error">{{ session('error') }}</div> @endif
+        @if (session('import_summary'))
+            @php($summary = session('import_summary'))
+            <div class="alert alert-success">Total baris: {{ $summary['total'] }} · Berhasil: {{ $summary['success'] }} · Gagal: {{ $summary['failed'] }} · Duplikat: {{ $summary['duplicates'] }} · Dilewati: {{ $summary['skipped'] }}</div>
+        @endif
+        @if (session('import_failures'))
+            <div class="alert alert-error"><strong>Data gagal diimport:</strong><ul>@foreach (session('import_failures') as $failure)<li>{{ $failure }}</li>@endforeach</ul></div>
+        @endif
 
         <section class="content-card">
             <form method="GET" class="filter-form filter-form-wide">
