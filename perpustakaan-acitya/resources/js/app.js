@@ -21,6 +21,28 @@ if (sidebar && sidebarToggle) {
     });
 }
 
+const landingMenuToggle = document.querySelector('[data-landing-menu-toggle]');
+const landingMenu = document.querySelector('[data-landing-menu]');
+
+if (landingMenuToggle && landingMenu) {
+    const setLandingMenuOpen = (isOpen) => {
+        landingMenu.classList.toggle('is-open', isOpen);
+        landingMenuToggle.setAttribute('aria-expanded', String(isOpen));
+    };
+
+    landingMenuToggle.addEventListener('click', () => {
+        setLandingMenuOpen(!landingMenu.classList.contains('is-open'));
+    });
+
+    landingMenu.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => setLandingMenuOpen(false));
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setLandingMenuOpen(false);
+    });
+}
+
 const scanner = document.querySelector('[data-qr-scanner]');
 
 if (scanner) {

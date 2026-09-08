@@ -42,8 +42,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-/* BOLEH DIUBAH: halaman depan sementara dapat diganti landing page. */
-Route::redirect('/', '/login');
+/* Halaman depan publik perpustakaan: tidak bergantung pada autentikasi atau database. */
+Route::get('/perpustakaan-acityawiguna', function () {
+    return view('landing');
+})->name('landing');
+
+/* Alamat lama tetap aman digunakan tanpa menduplikasi halaman landing. */
+Route::redirect('/', '/perpustakaan-acityawiguna');
 
 /* JANGAN DIUBAH: gerbang autentikasi utama. */
 Route::middleware('guest:petugas,anggota')->group(function () {

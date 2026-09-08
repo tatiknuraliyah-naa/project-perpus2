@@ -39,6 +39,12 @@ class EnsureRole
             }
         }
 
+        if (! auth('petugas')->check() && ! auth('anggota')->check() && $request->routeIs('katalog.*')) {
+            return redirect()
+                ->guest(route('login'))
+                ->with('login_notice', 'Silakan login terlebih dahulu untuk mengakses katalog.');
+        }
+
         abort(403, 'Anda tidak memiliki akses ke halaman ini.');
     }
 }

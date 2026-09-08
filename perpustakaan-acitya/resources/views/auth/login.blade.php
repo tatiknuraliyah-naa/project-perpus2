@@ -1,4 +1,4 @@
-g{{--
+{{--
 ======================================================
 Nama File : login.blade.php
 Fungsi : Form login untuk Petugas, Siswa, Guru, dan Karyawan.
@@ -14,9 +14,14 @@ Risiko : Mengubah nama input atau CSRF dapat membuat login gagal.
     {{-- BOLEH DIUBAH: tampilan form dan informasi akun contoh. --}}
     <main class="auth-page">
         <section class="auth-card" aria-labelledby="login-title">
+            <a href="{{ route('landing') }}" class="auth-back-link">← Kembali ke Beranda</a>
+            <header class="auth-brand">
+                <img src="{{ asset('images/logoperpus.png') }}" alt="Logo Perpustakaan Acitya Wiguna SMK Negeri 1 Rembang" class="auth-brand-logo">
+            </header>
             <p class="eyebrow">SMK Negeri 1 Rembang Purbalingga</p>
             <h1 id="login-title">Perpustakaan Acitya Wiguna</h1>
             <p class="muted">Masuk menggunakan identitas resmi sekolah Anda.</p>
+            @if (session('login_notice')) <p class="auth-notice" role="status">{{ session('login_notice') }}</p> @endif
             @if (session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
             {{-- JANGAN DIUBAH: form autentikasi membutuhkan POST dan CSRF. --}}
             <form method="POST" action="{{ route('login.store') }}" class="form-stack">

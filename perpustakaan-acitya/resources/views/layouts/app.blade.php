@@ -28,7 +28,10 @@ Risiko : Menghapus @vite membuat CSS tidak dimuat; menghapus CSRF membuat logout
         @endphp
         <div class="app-shell">
             <aside class="app-sidebar" id="app-sidebar">
-                <a class="brand" href="{{ $dashboardRoute }}"><span class="brand-mark" aria-hidden="true">A</span><span>Acitya<span>Lib</span></span></a>
+                <a class="brand" href="{{ $dashboardRoute }}">
+                    <img src="{{ asset('images/branding/logo-perpustakaan-acitya.jpeg') }}" alt="Logo Perpustakaan Acitya Wiguna" class="brand-logo">
+                    <span>Acitya<span>Lib</span></span>
+                </a>
                 <nav class="sidebar-nav" aria-label="Navigasi utama">
                     <p class="nav-label">Utama</p>
                     <a @class(['is-active' => request()->routeIs('dashboard.*')]) href="{{ $dashboardRoute }}"><span aria-hidden="true">▦</span> Dashboard</a>
