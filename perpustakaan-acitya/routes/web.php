@@ -80,7 +80,8 @@ Route::middleware('role:petugas,siswa,guru,karyawan')->group(function () {
     Route::post('/notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'read'])->name('notifikasi.read');
 });
 
-Route::get('/kunjungan/scan/{token:token}', [QrKunjunganController::class, 'scan'])->middleware('role:siswa,guru,karyawan')->name('qr-kunjungan.scan');
+/* URL yang ditanam di QR harus dapat dibuka tanpa sesi login. */
+Route::get('/kunjungan/scan/{token:token}', [QrKunjunganController::class, 'scan'])->name('qr-kunjungan.scan');
 Route::post('/kunjungan/scan/{token:token}', [QrKunjunganController::class, 'record'])->middleware('role:siswa,guru,karyawan')->name('qr-kunjungan.record');
 
 Route::middleware('role:siswa,guru,karyawan')->group(function () {

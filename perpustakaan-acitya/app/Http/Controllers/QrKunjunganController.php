@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class QrKunjunganController extends Controller
 {
@@ -27,18 +28,72 @@ class QrKunjunganController extends Controller
     }
     public function generate(Request $request): RedirectResponse
     {
-        $data = $request->validate(['menit_berlaku' => ['required', 'integer', 'min:5', 'max:480']]);
+        $data = $request->validate([
+            'jam_mulai' => ['required', 'date_format:H:i'],
+            'jam_selesai' => [
+                'required',
+                'date_format:H:i',
+                function (string $attribute, mixed $value, \Closure $fail) use ($request): void {
+                    $jamMulai = $request->input('jam_mulai');
+
+                    if (! is_string($jamMulai) || ! preg_match('/^\d{2}:\d{2}$/', $jamMulai) || ! is_string($value) || ! preg_match('/^\d{2}:\d{2}$/', $value)) {
+                        return;
+                    }
+
+                    [$mulaiJam, $mulaiMenit] = array_map('intval', explode(':', $jamMulai));
+                    [$selesaiJam, $selesaiMenit] = array_map('intval', explode(':', $value));
+
+                    if ($mulaiJam > 23 || $mulaiMenit > 59 || $selesaiJam > 23 || $selesaiMenit > 59) {
+                        return;
+                    }
+
+                    if (($selesaiJam * 60 + $selesaiMenit) <= ($mulaiJam * 60 + $mulaiMenit)) {
+                        $fail('Jam selesai harus lebih besar daripada jam mulai.');
+                    }
+                },
+            ],
+        ], [
+            'jam_mulai.required' => 'Jam mulai wajib diisi.',
+            'jam_mulai.date_format' => 'Format jam mulai harus HH:MM.',
+            'jam_selesai.required' => 'Jam selesai wajib diisi.',
+            'jam_selesai.date_format' => 'Format jam selesai harus HH:MM.',
+        ]);
+
+        $tanggal = now();
+        $mulai = $tanggal->copy()->setTimeFromTimeString($data['jam_mulai']);
+        $selesai = $tanggal->copy()->setTimeFromTimeString($data['jam_selesai']);
+
         QrKunjunganToken::query()->where('petugas_id', auth('petugas')->id())->where('aktif', true)->update(['aktif' => false]);
-        $token = QrKunjunganToken::create(['petugas_id' => auth('petugas')->id(), 'token' => Str::random(48), 'berlaku_sampai' => now()->addMinutes($data['menit_berlaku'])]);
+        $token = QrKunjunganToken::create(['petugas_id' => auth('petugas')->id(), 'token' => Str::random(48), 'jam_mulai' => $data['jam_mulai'], 'jam_selesai' => $data['jam_selesai'], 'start_at' => $mulai, 'berlaku_sampai' => $selesai]);
         ActivityLogger::log('Membuat QR kunjungan baru', 'Kunjungan');
         return redirect()->route('qr-kunjungan.index')->with('success', 'QR kunjungan baru berhasil dibuat.');
     }
-    public function scan(QrKunjunganToken $token): View
+    public function scan(string $token): RedirectResponse|Response
     {
-        abort_unless($token->masihBerlaku(), 410, 'QR Code sudah tidak berlaku.');
-        abort_unless(auth('anggota')->check(), 403);
-        $sudahMengisi = Kunjungan::where('anggota_id', auth('anggota')->id())->whereDate('tanggal', today())->exists();
-        return view('qr-kunjungan.scan', compact('token', 'sudahMengisi'));
+        $qrToken = QrKunjunganToken::query()->where('token', $token)->first();
+
+        if ($qrToken === null) {
+            return response()->view('qr-kunjungan.status', [
+                'title' => 'QR Tidak Valid',
+                'message' => 'QR Code tidak valid atau sudah tidak tersedia.',
+            ], 404);
+        }
+
+        if ($qrToken->belumAktif()) {
+            return response()->view('qr-kunjungan.status', [
+                'title' => 'QR Belum Aktif',
+                'message' => 'QR Code ini belum dapat digunakan. Silakan tunggu sampai waktu aktifnya.',
+            ], 409);
+        }
+
+        if (! $qrToken->masihBerlaku()) {
+            return response()->view('qr-kunjungan.status', [
+                'title' => 'QR Kedaluwarsa',
+                'message' => 'Masa berlaku QR Code ini telah berakhir. Silakan minta QR Code baru kepada petugas.',
+            ], 410);
+        }
+
+        return redirect()->route('landing');
     }
     public function record(Request $request, QrKunjunganToken $token): RedirectResponse
     {
